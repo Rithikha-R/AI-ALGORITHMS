@@ -1,0 +1,145 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+#define MAX 100
+
+struct node
+{
+    int vertex;
+    int cost;
+    struct node* next;
+};
+
+struct graph
+{
+    int num;
+    struct node* list[MAX];
+};
+
+struct node* createnode(int vertex, int cost)
+{
+    struct node* newnode = (struct node*)malloc(sizeof(struct node));
+    newnode->vertex = vertex;
+    newnode->cost = cost;
+    newnode->next = NULL;
+    return newnode;
+}
+
+struct graph* creategraph(int num) 
+{
+    struct graph* grph = (struct graph*)malloc(sizeof(struct graph));
+    grph->num = num;
+
+    for (int i = 0; i < num; i++)
+    {
+        grph->list[i] = NULL;
+    }
+    return grph;
+}
+
+void addEdge(struct graph* grph, int source, int dest, int cost)
+{
+    struct node* newnode = createnode(dest, cost);
+    newnode->next = grph->list[source];
+    grph->list[source] = newnode;
+
+    newnode = createnode(source, cost);
+    newnode->next = grph->list[dest];
+    grph->list[dest] = newnode;
+}
+
+void explorePaths(struct graph* grph, int current, int dest, bool visited[], int path[], int pathIndex, int* totalCost)
+{
+    visited[current] = true;
+    path[pathIndex] = current;
+
+    if (current == dest)
+    {
+        printf("Path: ");
+        int totalPathCost = 0;
+        for (int i = 0; i < pathIndex; i++)
+        {
+            printf("%d -> ", path[i]);
+            struct node* temp = grph->list[path[i]];
+            while (temp != NULL) {
+                if (temp->vertex == path[i + 1])
+                {
+                    totalPathCost += temp->cost;
+                    break;
+                }
+                temp = temp->next;
+            }
+        }
+        printf("%d\n", dest);
+        printf("Total Cost: %d\n", totalPathCost);
+        (*totalCost) += totalPathCost;
+    }
+    else
+    {
+        struct node* temp = grph->list[current];
+        while (temp != NULL)
+        {
+            if (!visited[temp->vertex])
+            {
+                explorePaths(grph, temp->vertex, dest, visited, path, pathIndex + 1, totalCost);
+            }
+            temp = temp->next;
+        }
+    }
+
+    visited[current] = false;
+}
+
+int main() 
+{
+    int num, edges;
+    printf("Enter number of vertices: ");
+    scanf("%d", &num);
+
+    struct graph* grph = creategraph(num);
+
+    printf("Enter number of edges: ");
+    scanf("%d", &edges);
+
+    printf("Enter source, destination, and cost for each edge:\n");
+    for (int i = 0; i < edges; i++) 
+    {
+        int source, dest, cost;
+        printf("Edge %d: ", i + 1);
+        scanf("%d %d %d", &source, &dest, &cost);
+
+        if (source < 0 || source >= num || dest < 0 || dest >= num)
+        {
+            printf("Invalid vertex\n");
+            i--;
+        } 
+        else
+        {
+            addEdge(grph, source, dest, cost);
+        }
+    }
+
+    int src, dest;
+    printf("Enter source node: ");
+    scanf("%d", &src);
+    printf("Enter destination node: ");
+    scanf("%d", &dest);
+
+    bool visited[MAX] = {false};
+    int path[MAX];
+    int totalCost = 0;
+
+    printf("All Possible Paths from %d to %d:\n", src, dest);
+    explorePaths(grph, src, dest, visited, path, 0, &totalCost);
+    if (totalCost == 0)
+    {
+        printf("No path exists.\n");
+    } 
+    else
+    {
+        printf("Total Cost of All Paths: %d\n", totalCost);
+    }
+
+    return 0;
+}
