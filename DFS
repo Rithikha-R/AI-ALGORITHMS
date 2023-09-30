@@ -1,0 +1,148 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+#define MAX 100
+
+struct node 
+{
+    int vertex;
+    struct node* next;
+};
+
+struct graph
+{
+    int num;
+    struct node* list[MAX];
+};
+
+struct node* createnode(int vertex)
+{
+    struct node* newnode = (struct node*)malloc(sizeof(struct node));
+    newnode->vertex = vertex;
+    newnode->next = NULL;
+    return newnode;
+}
+
+struct graph* creategraph(int num) 
+{
+    struct graph* grph = (struct graph*)malloc(sizeof(struct graph));
+    grph->num = num;
+
+    for(int i = 0; i < num; i++) 
+    {
+        grph->list[i] = NULL;
+    }
+    return grph;
+}
+
+void addnode(struct graph* grph, int source, int dest)
+{
+    struct node* newnode = createnode(dest);
+    newnode->next = grph->list[source];
+    grph->list[source] = newnode;
+}
+
+void sortAdjacencyList(struct graph* grph) 
+{
+    for (int i = 0; i < grph->num; i++) 
+    {
+        struct node* current = grph->list[i];
+        struct node* prev = NULL;
+        int temp;
+
+        while (current != NULL)
+        {
+            if (prev != NULL && prev->vertex > current->vertex) 
+            {
+                // Swap vertices
+                temp = prev->vertex;
+                prev->vertex = current->vertex;
+                current->vertex = temp;
+                // Move one step back to check the previous node again
+                if (prev != grph->list[i])
+                {
+                    prev = prev->next;
+                }
+            }
+            else
+            {
+                prev = current;
+                current = current->next;
+            }
+        }
+    }
+}
+
+bool DFS(struct graph* grph, int current, int dest, bool visited[])
+{
+    printf("%d ", current);
+    visited[current] = true;
+
+    if (current == dest)
+    {
+        return true;
+    }
+
+    sortAdjacencyList(grph); // Sort adjacency list before exploring neighbors
+
+   struct node* temp = grph->list[current];
+    while (temp != NULL) {
+        if (!visited[temp->vertex]) 
+        {
+            printf(" -> ");
+            if (DFS(grph, temp->vertex, dest, visited))
+            {
+                return true;
+            }
+        }
+        temp = temp->next;
+    }
+
+    return false;
+}
+
+int main()
+{
+    int num, edges;
+    printf("Enter number of vertices: ");
+    scanf("%d", &num);
+
+    struct graph* grph = creategraph(num);
+
+    printf("Enter number of edges: ");
+    scanf("%d", &edges);
+
+    printf("Enter source and destination vertex: \n");
+    for (int i = 0; i < edges; i++) {
+        int source, dest;
+        printf("Edge %d: ", i + 1);
+        scanf("%d %d", &source, &dest);
+
+        if (source < 0 || source >= num || dest < 0 || dest >= num) 
+        {
+            printf("Invalid vertex\n");
+            i--;
+        }
+        else 
+        {
+            addnode(grph, source, dest);
+        }
+    }
+
+    int src, dest;
+    printf("Enter source node: ");
+    scanf("%d", &src);
+    printf("Enter destination node: ");
+    scanf("%d", &dest);
+
+    bool visited[MAX] = {false};
+    printf("DFS Path from %d to %d: ", src, dest);
+    if (!DFS(grph, src, dest, visited))
+    {
+        printf("No path exists.\n");
+    }
+    printf("\n");
+
+    return 0;
+}
